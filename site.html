@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pesquisa Sapo News</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #FFA500;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"],
+    input[type="submit"] {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    input[type="submit"] {
+      background-color: #FFA500;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    #rating-stars {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .star {
+      font-size: 25px;
+      color: #ADFF2F;
+      cursor: pointer;
+    }
+
+    .star:hover,
+    .star.active {
+      color: #FFA500;
+    }
+
+    #chart-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let selectedRating = 0;
+    let submitted = localStorage.getItem('submitted') === 'true';
+
+    function handleStarClick(index) {
+      if (!submitted) {
+        selectedRating = index;
+        for (let i = 1; i <= 10; i++) {
+          const star = document.getElementById(`star-${i}`);
+          if (i <= index) {
+            star.classList.add('active');
+          } else {
+            star.classList.remove('active');
+          }
+        }
+      }
+    }
+
+    function handleSubmit() {
+      if (submitted) {
+        alert('Você já enviou sua avaliação. Obrigado!');
+      } else if (selectedRating === 0) {
+        alert('Por favor, avalie o jornal com estrelas antes de enviar.');
+      } else {
+        const name = document.getElementById('name').value;
+        if (name.trim() === '') {
+          alert('Por favor, digite o seu nome no Discord.');
+        } else {
+          alert(`Obrigado, ${name}! Você avaliou o jornal com ${selectedRating} estrela(s).`);
+          document.getElementById('rating-form').reset();
+          selectedRating = 0;
+          submitted = true;
+          localStorage.setItem('submitted', 'true');
+          disableForm();
+          resetStars();
+          updateChart();
+        }
+      }
+    }
+
+    function disableForm() {
+      const form = document.getElementById('rating-form');
+      const elements = form.elements;
+      for (let i = 0; i < elements.length; i++) {
+        elements[i].disabled = true;
+      }
+    }
+
+    function resetStars() {
+      for (let i = 1; i <= 10; i++) {
+        const star = document.getElementById(`star-${i}`);
+        star.classList.remove('active');
+      }
+    }
+
+    function updateChart() {
+      const ratings = getStoredRatings();
+      const data = {
+        labels: Object.keys(ratings),
+        datasets: [
+          {
+            label: 'Avaliações',
+            data: Object.values(ratings),
+            backgroundColor: '#FFA500',
+          }
+        ]
+      };
+
+      const ctx = document.getElementById('chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 10
+            }
+          }
+        }
+      });
+    }
+
+    function getStoredRatings() {
+      const storedRatings = localStorage.getItem('ratings');
+      if (storedRatings) {
+        return JSON.parse(storedRatings);
+      } else {
+        return {};
+      }
+    }
+
+    // Check if the form was previously submitted
+    if (submitted) {
+      disableForm();
+      updateChart();
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Pesquisa Sapo News</h1>
+
+    <form id="rating-form" onsubmit="event.preventDefault(); handleSubmit();">
+      <label for="rating">Avalie o Jornal:</label>
+      <div id="rating-stars">
+        <span class="star" id="star-1" onclick="handleStarClick(1)">&#9733;</span>
+        <span class="star" id="star-2" onclick="handleStarClick(2)">&#9733;</span>
+        <span class="star" id="star-3" onclick="handleStarClick(3)">&#9733;</span>
+        <span class="star" id="star-4" onclick="handleStarClick(4)">&#9733;</span>
+        <span class="star" id="star-5" onclick="handleStarClick(5)">&#9733;</span>
+        <span class="star" id="star-6" onclick="handleStarClick(6)">&#9733;</span>
+        <span class="star" id="star-7" onclick="handleStarClick(7)">&#9733;</span>
+        <span class="star" id="star-8" onclick="handleStarClick(8)">&#9733;</span>
+        <span class="star" id="star-9" onclick="handleStarClick(9)">&#9733;</span>
+        <span class="star" id="star-10" onclick="handleStarClick(10)">&#9733;</span>
+      </div>
+
+      <label for="name">Seu nome no Discord:</label>
+      <input type="text" id="name" required>
+
+      <input type="submit" value="Enviar Avaliação">
+    </form>
+
+    <div id="chart-container">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+</body>
+</html>
